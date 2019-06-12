@@ -41,8 +41,8 @@ Let's inspect the singularity container. What software is loaded on it?
 ```bash
 nextflow run main.nf \
   -resume \
-  -with-report ./reports/rnaseq_test.html \
-  -with-dag ./reports/rnaseq_test_dag.pdf
+  -with-report nextflow_report.html \
+  -with-dag flowchart.html
 ```
 
 ## View the pipeline reports in your browser
