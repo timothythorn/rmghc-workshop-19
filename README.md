@@ -38,6 +38,13 @@ Let's inspect the singularity container. What software is loaded on it?
 
 ## Run the RNA-seq analysis pipeline with nextflow
 
+```bash
+nextflow run main.nf \
+  -resume \
+  -with-report ./reports/rnaseq_test.html \
+  -with-dag ./reports/rnaseq_test_dag.pdf
+```
+
 ## View the pipeline reports in your browser
 
 ## Add a process to run the differential expression RScript
