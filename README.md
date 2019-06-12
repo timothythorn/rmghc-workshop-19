@@ -17,6 +17,10 @@ An introduction to tools for reproducible analysis pipelines.
 Fork this repository so you have your own copy
 
 Clone your new repository
+```bash
+git clone https://github.com/msmallegan/rmghc-workshop-19.git
+```
+
 
 ## Edit files two ways
 
