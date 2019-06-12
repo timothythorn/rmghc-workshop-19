@@ -14,11 +14,9 @@ An introduction to tools for reproducible analysis pipelines.
 
 ## Set up your git repository
 
-Clone this repository
+Fork this repository so you have your own copy
 
-Create a new repository in your GitHub account
-
-Push your repository to GitHub
+Clone your new repository
 
 ## Edit files two ways
 
@@ -26,7 +24,7 @@ Use your file manager to edit a file on your compute instance on your local mach
 
 Use nano on the command line to edit the same file. 
 
-Commit your changes and push to GitHub.
+Commit your changes and push to GitHub
 
 ## Interact with singularity
 
