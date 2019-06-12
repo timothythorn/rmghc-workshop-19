@@ -73,7 +73,6 @@ process fastqc {
 
 process map {
 
-  clusterOptions '--nodes=1 --ntasks=4 --mem=40gb'
   publishDir 'results/bam'
 
   input:
@@ -139,7 +138,6 @@ process count {
 process salmon {
 
   publishDir 'results/salmon'
-  clusterOptions '--ntasks=8'
 
   input:
   file transcript_fasta from transcriptome
@@ -164,7 +162,6 @@ process salmon {
 process sort_bam {
 
   publishDir 'results/igv'
-  clusterOptions '--mem=32gb'
 
   input:
   set sample_id, file(bam_file) from mapped_for_igv
@@ -255,7 +252,6 @@ process compile_counts {
 process multiqc {
 
   publishDir "results/multiqc"
-  clusterOptions '--ntasks=1'
 
   input:
   file fastqc from fastqc_compiled
