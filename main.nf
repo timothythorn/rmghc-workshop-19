@@ -1,7 +1,7 @@
 #!/usr/bin/env nextflow
 params.name             = "RNA-seq"
 params.email            = "michael.smallegan@colorado.edu"
-params.fastq_pattern    = "*{*_R1,*_R2}.fastq.gz"
+params.reads            = "/data/fastq/*{*_R1,*_R2}.fastq.gz"
 
 
 
@@ -14,46 +14,11 @@ log.info "\n"
 
 
 
-process retrieve_input {
-  container false
-  publishDir 'input'
-
-  output:
-  file "annotation/*" into annotation
-  file "genome/*" into genome
-  file "sample_info/*" into sample_info
-  file "fastq/*" into fastq
-  file "index" into index
-
-  script:
-  """
-  mkdir input
-  rsync -r /scratch/Shares/rinn/Michael/rmghc-workshop-files input
-  mv ./input/rmghc-workshop-files/* .
-  rm -rf input
-  """
-}
-
-
-
-process collect_fastqs {
-
-  input:
-  val sample from sample_info.splitCsv(header: true)
-  file fastqs from fastq.collect()
-
-  output:
-  set val("${sample.SampleID}"), file("${sample.SampleID}_R1.fastq.gz"), file("${sample.SampleID}_R2.fastq.gz") into reads
-
-  script:
-  """
-  echo ${sample.SampleID}
-  """
-}
-
-
-
-reads
+annotation = Channel.fromPath("/data/annotation/*")
+genome = Channel.fromPath("/data/genome/*")
+sample_info = Channel.fromPath("/data/sample_info/*")
+index = Channel.fromPath("/data/index")
+reads = Channel.fromFilePairs(params.reads, size: -1)
   .ifEmpty { error "Can't find any reads matching: ${params.reads}" }
   .into {
     reads_for_fastqc;
@@ -93,14 +58,14 @@ process fastqc {
   publishDir 'results/fastqc'
 
   input:
-  set sample_id, file(fastq1), file(fastq2) from reads_for_fastqc
+  set sample_id, file(fastqz) from reads_for_fastqc
 
   output:
   file "*.zip" into fastqc
 
   script:
   """
-  fastqc --threads 4 -f fastq -q ${fastq1} ${fastq2}
+  astqc --threads 4 -f fastq -q ${fastqz}
   """
 }
 
@@ -112,7 +77,7 @@ process map {
   publishDir 'results/bam'
 
   input:
-  set sample_id, file(reads1), file(reads2), file(index) from reads_for_mapping.combine(index)
+  set sample_id, file(reads), file(index) from reads_for_mapping.combine(index)
 
   output:
   set sample_id, file("*Aligned.out.bam") into mapped_genome
@@ -123,8 +88,8 @@ process map {
   """
   STAR  --runThreadN 4 \
   --genomeDir ${index} \
-  --readFilesIn ${reads1} \
-                ${reads2} \
+  --readFilesIn ${reads.findAll{ it =~ /\_R1\./ }.join(',')} \
+                ${reads.findAll{ it =~ /\_R2\./ }.join(',')} \
   --readFilesCommand zcat \
   --outSAMtype BAM Unsorted \
   --outSAMunmapped Within \
