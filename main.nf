@@ -36,6 +36,7 @@ annotation.into {
 
 process make_transcriptome {
 
+  maxForks 1
   publishDir 'results/genome'
 
   input:
@@ -55,6 +56,7 @@ process make_transcriptome {
 
 process fastqc {
 
+  maxForks 1
   publishDir 'results/fastqc'
 
   input:
@@ -73,6 +75,7 @@ process fastqc {
 
 process map {
 
+  maxForks 1
   publishDir 'results/bam'
 
   input:
@@ -85,7 +88,7 @@ process map {
 
   script:
   """
-  STAR  --runThreadN 4 \
+  STAR  --runThreadN 1 \
   --genomeDir ${index} \
   --readFilesIn ${reads.findAll{ it =~ /\_R1\./ }.join(',')} \
                 ${reads.findAll{ it =~ /\_R2\./ }.join(',')} \
@@ -125,7 +128,7 @@ process count {
   """
   featureCounts  -C \
     -p \
-    -T 4 \
+    -T 1 \
     -g gene_id \
     -a ${annotation} \
     -o ${sample_id}.fCounts \
@@ -149,7 +152,7 @@ process salmon {
   script:
   """
   salmon quant -l A \
-    -p 8 \
+    -p 1 \
     -t ${transcript_fasta} \
     -o ${sample_id} \
     -a ${bam} \
@@ -171,7 +174,7 @@ process sort_bam {
 
   script:
   """
-  samtools sort --threads 4 \
+  samtools sort --threads 1 \
     -m 4G \
     -o ${sample_id}.bam \
     ${bam_file}
@@ -264,9 +267,6 @@ process multiqc {
 
   script:
   """
-  export LC_ALL=en_US.UTF-8
-  export LANG=en_US.UTF-8
-
   multiqc ${fastqc} \
     ${star} \
     ${salmon} \
