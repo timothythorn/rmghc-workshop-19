@@ -65,7 +65,7 @@ process fastqc {
 
   script:
   """
-  astqc --threads 4 -f fastq -q ${fastqz}
+  fastqc --threads 4 -f fastq -q ${fastqz}
   """
 }
 
