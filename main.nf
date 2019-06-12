@@ -1,12 +1,11 @@
 #!/usr/bin/env nextflow
-params.name             = "Rinn Lab RNA-seq test"
+params.name             = "RNA-seq"
 params.email            = "michael.smallegan@colorado.edu"
-params.gcs_bucket       = "gs://rmghc-workshop"
 params.fastq_pattern    = "*{*_R1,*_R2}.fastq.gz"
 
 
 
-log.info "Rinn Lab RNA-seq Pipeline"
+log.info "RNA-seq Pipeline"
 log.info "====================================="
 log.info "name         : ${params.name}"
 log.info "email        : ${params.email}"
@@ -29,8 +28,8 @@ process retrieve_input {
   script:
   """
   mkdir input
-  rsync -r /scratch/Shares/rinn/Michael/rmghc-workshop input
-  mv input/rmghc_workshop/* .
+  rsync -r /scratch/Shares/rinn/Michael/rmghc-workshop-files input
+  mv ./input/rmghc-workshop-files/* .
   rm -rf input
   """
 }
