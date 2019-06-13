@@ -291,8 +291,7 @@ process differential_expression {
 
   script:
   """
-  #!/usr/bin/env Rscript
-  Sys.setenv(RSTUDIO_PANDOC="${baseDir}/bin/pandoc")
-  rmarkdown::render("${baseDir}/bin/differential_expression.Rmd")
+  Rscript -e 'rmarkdown::render("${baseDir}/bin/differential_expression.Rmd",
+  params = list(baseDir = ${baseDir}))'
   """
 }
