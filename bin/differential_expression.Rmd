@@ -1,10 +1,12 @@
 ---
-title: "Differential Expression: {{name}}"
+title: "Differential Expression: RNA-seq example"
 author: "`r getOption('author')`"
 date: "`r Sys.Date()`"
 params:
-  design: !r formula("{{design}}")
-  contrasts: !r list({{contrasts}})
+  design: !r formula("~ Timepoint")
+  contrasts: !r list(c(factor = "Timepoint",
+        numerator = "90",
+        denominator = "0"))
   alpha: 0.01
   lfc_threshold: 0.5
   data_dir: !r file.path("../data", Sys.Date())
@@ -35,10 +37,9 @@ invisible(mapply(
 ```{r import_counts, message=FALSE, warning=FALSE, results='hide'}
 
 # Read in gencode annotations
-gtf <- rtracklayer::import("../input/annotation/gencode.vM21.annotation.gtf")
+gtf <- rtracklayer::import("/data/annotation/gencode.vM21.annotation.gtf")
 
 
-paste(setdiff(as.character(samples$SampleID), as.character(samples[which(samples$Condition == "overexpression" & samples$CellType == "mESCs" & (samples$Timepoint == 0 | samples$Timepoint == 60 | samples$Timepoint == 90 | samples$Timepoint == 120 | samples$Timepoint ==30)), "SampleID"])), collapse = "* ")
 
 #TODO: put this parsing in a setup file to clean this up.
 names(gtf@elementMetadata@listData)[which(names(gtf@elementMetadata@listData) == "gene_id")] <-
@@ -52,6 +53,7 @@ gtf@elementMetadata$id <- gtf@elementMetadata$geneID
 
 gtfdf <- gtf %>% as.data.frame()
 g2s <- as.data.frame(gtf@elementMetadata@listData) %>% select(geneID, geneName) %>% distinct()
+
 tx2gene <- gtfdf %>%
   mutate(TXNAME = transcript_id, GENEID = geneID) %>%
   select(TXNAME, GENEID)
@@ -59,15 +61,9 @@ tx2gene <- gtfdf %>%
 
 
 # Read in sample annotations
-samples <- read.csv("../sample_info/{{sample_sheet}}", header = FALSE) %>%
-  separate(V1, into = c("Gene", "Tissue", "{{gene_knockedout}}", "Replicate",
-                        "SampleID", "Index", "Lane", "Read", "ftype", "gz")) %>%
-  select(SampleID, Tissue, Gene, {{gene_knockedout}}) %>%
-  distinct() %>%
-  unite(Condition, c("Tissue", "{{gene_knockedout}}"), remove = FALSE)
-rownames(samples) <- samples$SampleID
-
-
+samples <- read.csv("../sample_info/timecourse_samplesheet.csv") %>%
+  mutate(Timepoint = factor(Timepoint,
+         levels = c("0", "90")))
 
 
 
@@ -77,11 +73,18 @@ names(files) <- samples$SampleID
 txi.salmon <- tximport(files, type = "salmon", tx2gene = tx2gene)
 
 
-gene_ids_used <- rownames(txi.salmon$counts)
-gtf <- gtf[which(gtf$geneID %in% gene_ids_used)]
-gtf <- gtf[which(gtf$type == "gene")]
-```
+# Ensure that the ordering of the columns in the counts matrix
+# is the same as in the sample sheet.
+rownames(samples) <- samples$SampleID
+samples <- samples[colnames(txi.salmon$counts),]
+stopifnot(all(rownames(samples) == colnames(txi.salmon$counts)))
 
+# Ensure that the ordering of the rows (gene info)
+# is the same between the counts and the gencode
+names(gtf) <- gtf$geneID
+gtf <- gtf[rownames(txi.salmon$counts)]
+stopifnot(all(names(gtf) == rownames(txi.salmon$counts)))
+```
 
 
 ```{r create_DESeqDataSet}
@@ -104,20 +107,6 @@ print(dds)
 ```
 
 
-# Factor reference level
-
-By default, [R][] will choose a reference level for factors based on alphabetical order. Then, if you never tell the [DESeq2][] functions which level you want to compare against (e.g. which level represents the control group), the comparisons will be based on the alphabetical order of the levels. There are two solutions: you can either explicitly tell results which comparison to make using the contrast argument (this will be shown later), or you can explicitly set the factors levels. You should only change the factor levels of variables in the design before running the [DESeq2][] analysis, not during or afterward. Setting the factor levels can be done in two ways, using either the `factor()` or `relevel()` functions. Generally we recommend using `relevel()` here.
-
-```{r relevel, eval=FALSE}
-# Specify the reference level (preferred)
-# dds$Tug1 <- relevel(dds$Tug1, ref = "WT")
-
-# # Alternatively, can explicitly define, using `factor()`
-# # When using this approach, put the reference level (control) first
-# dds$treatment <- factor(dds$treatment, levels = c("control", "folic_acid"))
-
-# print(dds$Tug1)
-```
 
 # Differential expression analysis
 
@@ -289,19 +278,6 @@ cat(paste(mdout,collapse="\n"))
 saveData(res_tbl_list, dir = params$data_dir)
 ```
 
-
-Differentially expressed gene (DEG) tables are sorted by BH-adjusted P value, and contain the following columns:
-
-- `baseMean`: Mean of the normalized counts per gene for all samples.
-- `log2FoldChange`: log2 fold change.
-- `lfcSE`: log2 standard error.
-- `stat`: Wald statistic.
-- `pvalue`: Walt test *P* value.
-- `padj`: BH adjusted Wald test *P* value (corrected for multiple comparisons; aka FDR).
-
-## Top tables
-
-Only the top up- and down-regulated genes (arranged by log2 fold change) are shown.
 
 ## Top tables
 
