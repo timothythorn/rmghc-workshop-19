@@ -29,7 +29,8 @@ reads = Channel.fromFilePairs(params.reads, size: -1)
 
 annotation.into {
   annotation_for_count;
-  annotation_for_transcriptome
+  annotation_for_transcriptome;
+  annotation_for_de;
 }
 
 
@@ -282,16 +283,18 @@ process multiqc {
 
 
 
-process differential_expression {
-
-  publishDir 'reports', mode: 'copy'
-
-  input:
-  file sample_file from salmon_for_de.collect()
-
-  script:
-  """
-  Rscript -e 'rmarkdown::render("${baseDir}/bin/differential_expression.Rmd",
-  params = list(baseDir = ${baseDir}))'
-  """
-}
+// process differential_expression {
+//
+//   publishDir 'reports', mode: 'copy'
+//
+//   input:
+//   file sample_file from salmon_for_de.collect()
+//   file annotation from annotation_for_de
+//
+//   script:
+//   """
+//   Rscript -e 'rmarkdown::render("${baseDir}/bin/differential_expression.Rmd", \
+//     params = list(baseDir = "${baseDir}",\
+//                   annotation_file = "${annotation}"))'
+//   """
+// }
