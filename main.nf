@@ -148,6 +148,7 @@ process salmon {
 
   output:
   file("*") into salmon
+  file("*") into salmon_for_de
 
   script:
   """
@@ -278,17 +279,17 @@ process multiqc {
 
 
 
-// process differential_expression {
-//
-//   publishDir 'reports', mode: 'copy'
-//
-//   input:
-//   file sample_file from salmon_out.collect()
-//
-//   script:
-//   """
-//   Rscript -e 'rmarkdown::render("${baseDir}/analysis/01_quality_control.Rmd")'
-//   Rscript -e 'rmarkdown::render("${baseDir}/analysis/02_differential_expression.Rmd")'
-//   Rscript -e 'rmarkdown::render("${baseDir}/analysis/03_functional_analysis.Rmd")'
-//   """
-// }
+process differential_expression {
+
+  publishDir 'reports', mode: 'copy'
+
+  input:
+  file sample_file from salmon_for_de.collect()
+
+  script:
+  """
+  #!/usr/bin/env Rscript
+  Sys.setenv(RSTUDIO_PANDOC="${baseDir}/bin/pandoc")
+  rmarkdown::render("${baseDir}/bin/differential_expression.Rmd")
+  """
+}
