@@ -88,7 +88,7 @@ process map {
 
   script:
   """
-  STAR  --runThreadN 1 \
+  STAR  --runThreadN 5 \
   --genomeDir ${index} \
   --readFilesIn ${reads.findAll{ it =~ /\_R1\./ }.join(',')} \
                 ${reads.findAll{ it =~ /\_R2\./ }.join(',')} \
