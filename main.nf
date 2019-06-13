@@ -42,10 +42,12 @@ process make_transcriptome {
   input:
   file annotation from annotation_for_transcriptome
   file genome from genome
+  file sample_info from sample_info
 
   output:
   file "transcriptome.fa" into transcriptome
   file "gencode.vM21.annotation.gtf"
+  file "sample_sheet.csv"
 
   script:
   """

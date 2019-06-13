@@ -37,7 +37,7 @@ invisible(mapply(
 ```{r import_counts, message=FALSE, warning=FALSE, results='hide'}
 
 # Read in gencode annotations
-gtf <- rtracklayer::import("/data/annotation/gencode.vM21.annotation.gtf")
+gtf <- rtracklayer::import("../results/genome/gencode.vM21.annotation.gtf")
 
 
 
@@ -61,7 +61,7 @@ tx2gene <- gtfdf %>%
 
 
 # Read in sample annotations
-samples <- read.csv("../sample_info/timecourse_samplesheet.csv") %>%
+samples <- read.csv("../results/genome/sample_sheet.csv") %>%
   mutate(Timepoint = factor(Timepoint,
          levels = c("0", "90")))
 
