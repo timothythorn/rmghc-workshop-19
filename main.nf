@@ -45,6 +45,7 @@ process make_transcriptome {
 
   output:
   file "transcriptome.fa" into transcriptome
+  file "gencode.vM21.annotation.gtf"
 
   script:
   """
